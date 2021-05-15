@@ -21,7 +21,8 @@ export default function BookList() {
           return (
           <div>
             <br />
-            <Link to={`/Books/${key}`} style={{ textDecoration: 'none' }} onClick={() => setCurrentBooks(key)}>
+            <Link to={`/Books/${key}`} style={{ textDecoration: 'none', color: 'black' }}
+            onClick={() => setCurrentBooks(key)}>
               {`${temp[key]['BookName']} by ${temp[key]['Author']}`}
             </Link>
           </div>);
@@ -39,7 +40,10 @@ export default function BookList() {
   return (
     <Card>
       <Card.Body className='text-center'>
-        {books}
+        <h2 className='text-center mb-4'>Books</h2>
+        <div className='scrollThings' style={{ overflow: 'auto', minHeight: '100px', maxHeight: '600px' }}>
+          {books}
+        </div>
       </Card.Body>
     </Card>
   );

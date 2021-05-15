@@ -1,4 +1,4 @@
-.App {
+/* .App {
   text-align: center;
 }
 
@@ -22,8 +22,24 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+} */
+
+/* .scrollThings {
+  overflow-y: auto;
+  min-height: 500px;
+  max-height: 600px;
+} */
+
+.scrollThings::-webkit-scrollbar {
+  width: 4px;
 }
 
+.scrollThings::-webkit-scrollbar-thumb {
+  background: #00000080;
+  border-radius: 4px;
+}
+
+/* 
 .App-link {
   color: #61dafb;
 }
@@ -35,4 +51,4 @@
   to {
     transform: rotate(360deg);
   }
-}
+} */

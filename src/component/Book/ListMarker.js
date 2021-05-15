@@ -18,8 +18,8 @@ export default function ListMarker() {
           return(
             <>
               <br />
-              <Link to={`/Books/${booksId}/${key}`} style={{ textDecoration: 'none' }}
-                oncLick={() => setCurrentMarker(key)}>
+              <Link to={`/Books/${booksId}/${key}`} style={{ textDecoration: 'none', color: 'black' }}
+              oncLick={() => setCurrentMarker(key)}>
                 {`${key}`}
               </Link>
             </>
@@ -37,11 +37,14 @@ export default function ListMarker() {
   return (
     <Card>
       <Card.Body className='text-center'>
-        <div className='d-flex justify-content-space-between'>
+        <h2 className='text-center mb-4'>Marker</h2>
+        <div className='d-flex justify-content-center'>
           <Button onClick={() =>  {history.push(`/Store/${booksId}`) } }>Edit Store</Button>
           <Button onClick={() =>  {history.push(`/Marker/${booksId}`) } }>Add Marker </Button>
         </div>
-        {details}
+        <div className='scrollThings' style={{ overflow: 'auto', minHeight: '100px', maxHeight: '600px' }}>
+          {details}
+        </div>
       </Card.Body>
     </Card>
   )

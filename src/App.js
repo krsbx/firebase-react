@@ -1,3 +1,4 @@
+import './App.css';
 import { AuthProvider } from './component/Context/AuthContext';
 import { BooksProvider } from './component/Context/BooksContext';
 import Homepage from './component/Homepage';
