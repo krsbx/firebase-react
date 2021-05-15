@@ -1,10 +1,7 @@
-import Login from './component/Login/Login';
-import Register from './component/Register/Register';
-import BoookList from './component/Book/BookList';
-import BookDetails from './component/Book/ListMarker';
 import { AuthProvider } from './component/Context/AuthContext';
 import { BooksProvider } from './component/Context/BooksContext';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import Homepage from './component/Homepage';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { Container } from 'react-bootstrap'
 
 function App() {
@@ -17,24 +14,9 @@ function App() {
         style={{ minHeight: '100vh' }}>
           <div className='w-100' style={{ maxWidth: '400px' }}>
             <AuthProvider>
-              <Switch>
-                {/* Dashboard = Books List */}
-                <Route exact path='/' component={Login} />
-                {/* Register Page */}
-                <Route path='/Register' component={Register}/>
-                {/* Login Page */}
-                <Route path='/Login' component={Login} />
-                  <BooksProvider>
-                    {/* Books List */}
-                    <Route exact path='/Books' component={BoookList} />
-                    {/* Books Details */}
-                      {/* List of Markers */}
-                    <Route exact path='/Books/:booksId' component={BookDetails} />
-                    {/* Marker Details */}
-                      {/* Marker Informations */}
-                    <Route exact path='/Books/:booksId/:marker' component={Register} />
-                  </BooksProvider>
-              </Switch>
+              <BooksProvider>
+                <Homepage />
+              </BooksProvider>
             </AuthProvider>
           </div>
         </Container>

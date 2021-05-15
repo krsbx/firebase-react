@@ -8,11 +8,6 @@ export default function BookList() {
   const [books, setBooks] = useState([]);
   const { setCurrentBooks } = useBooks();
 
-  const SetBooksName = (name) => {
-    console.log(name);
-    setCurrentBooks(name);
-  }
-
   const GetAllBooks = () => {
     database.ref('Books').on('value', snapshot => {
       if(snapshot.exists()){
@@ -26,7 +21,7 @@ export default function BookList() {
           return (
           <div>
             <br />
-            <Link to={`/Books/${key}`} style={{ textDecoration: 'none' }} onClick={() => SetBooksName(key)}>
+            <Link to={`/Books/${key}`} style={{ textDecoration: 'none' }} onClick={() => setCurrentBooks(key)}>
               {`${temp[key]['BookName']} by ${temp[key]['Author']}`}
             </Link>
           </div>);
