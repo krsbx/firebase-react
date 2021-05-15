@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../Context/AuthContext';
 import { useHistory } from 'react-router-dom';
+import { Form, Button, Card, Alert } from 'react-bootstrap';
 
 export default function Register() {
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [requesting, setRequest] = useState(false);
   const { SignUp } = useAuth();
   const history = useHistory();
@@ -12,32 +15,53 @@ export default function Register() {
   const CreateUser = async (event) => {
     event.preventDefault();
 
-    if(email === undefined){
-      console.log('Email Is Empty');
-      return;
+    if(password !== passwordConfirm){
+      return setError('Password Did Not Match');
     }
 
-    if(password === undefined){
-      console.log('Password Is Empty');
-      return;
-    }
-
-    setRequest(true);
     try {
+      setError('');
+      setRequest(true);
+
       await SignUp(email, password);
       history.push('/Login');
-    } catch(error) {
-      console.log(error.message);
-      return;
+    } catch {
+      setError('Failed to Create Account');
     }
     setRequest(false);
   }
 
   return (
-    <form onSubmit={ CreateUser }>
-      <input type="text" value={email} onChange={e => setEmail(e.target.value)}></input>
-      <br /><input type="password" value={password} onChange={e => setPassword(e.target.value)}></input>
-      <br /><button type="submit" disabled={requesting}>Register</button>
-    </form>
+    <Card>
+      <Card.Body>
+        <h2 className='text-center mb-4'>Register</h2>
+        { error && <Alert variant='danger'>{ error }</Alert> }
+        <Form onSubmit={ CreateUser }>
+          <Form.Group className='mb-2'>
+            <Form.Label>Email</Form.Label>
+            <Form.Control type='email' value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder='Enter Emails'
+            required/>
+          </Form.Group>
+          <Form.Group className='mb-2'>
+            <Form.Label>Password</Form.Label>
+            <Form.Control type='password' value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder='Enter Password'
+            required/>
+          </Form.Group>
+          <Form.Group className='mb-2'>
+            <Form.Label>Password Confirmations</Form.Label>
+            <Form.Control type='password' value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            placeholder='Enter Password'
+            required/>
+          </Form.Group>
+          <Button type='submit' disabled={ requesting }
+          className='w-100'>Register</Button>
+        </Form>
+      </Card.Body>
+    </Card>
   );
 }
