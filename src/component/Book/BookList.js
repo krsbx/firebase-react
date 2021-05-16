@@ -1,34 +1,23 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../Context/AuthContext';
 import { useBooks } from '../Context/BooksContext';
 import { database } from '../Firebase/FirebaseSDK';
 import { Link } from 'react-router-dom';
-import { Card } from 'react-bootstrap';
+import { Card, Button, Form } from 'react-bootstrap';
 
 export default function BookList() {
   const [books, setBooks] = useState([]);
+  const [searchParams, setSearchParams] = useState('');
+  const { LogOut } = useAuth();
   const { setCurrentBooks } = useBooks();
 
   const GetAllBooks = () => {
     database.ref('Books').on('value', snapshot => {
       if(snapshot.exists()){
-        //Get The Number of Children
-        console.log(snapshot.numChildren());
         //Get The Books Informations
         const temp = snapshot.val();
 
-        //Get All Path
-        const toBooks = Object.keys(temp).map( function (key, index) {
-          return (
-          <div>
-            <br />
-            <Link to={`/Books/${key}`} style={{ textDecoration: 'none', color: 'black' }}
-            onClick={() => setCurrentBooks(key)}>
-              {`${temp[key]['BookName']} by ${temp[key]['Author']}`}
-            </Link>
-          </div>);
-        });
-
-        setBooks(toBooks);
+        setBooks(temp);
       }
     })
   }
@@ -37,12 +26,40 @@ export default function BookList() {
     GetAllBooks();
   }, []);
 
+  const searchResult = () => {
+    //Get All Path
+    const toBooks = Object.keys(books).filter((b) => {
+      if(searchParams === ''){
+        return b;
+      }else if(b.toLowerCase().includes(searchParams.toLowerCase())){
+        return b;
+      }
+    }).map( function (key, index) {
+      return (
+        <div key={key} className='pt-2 pb-2'>
+          <Link to={`/Books/${key}`} style={{ textDecoration: 'none', color: 'black' }}
+          onClick={() => setCurrentBooks(key)}>
+            {`${books[key]['BookName']} by ${books[key]['Author']}`}
+          </Link>
+      </div>);
+    });
+
+    return toBooks;
+  }
+
   return (
     <Card>
       <Card.Body className='text-center'>
         <h2 className='text-center mb-4'>Books</h2>
+        <Button onClick={() => LogOut() }>Log Out</Button>
+        <Form.Group className='mt-2'>
+            <Form.Control type='text' value={searchParams}
+            onChange={(e) => setSearchParams(e.target.value)}
+            placeholder='Search Books'
+            required/>
+        </Form.Group>
         <div className='scrollThings' style={{ overflow: 'auto', minHeight: '100px', maxHeight: '600px' }}>
-          {books}
+          {searchResult()}
         </div>
       </Card.Body>
     </Card>

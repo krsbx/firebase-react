@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, createContext } from 'react';
+import { useState, useContext, createContext } from 'react';
 
 export const BooksContext = createContext();
 
@@ -11,10 +11,8 @@ export function BooksProvider({children}) {
   const [currentMarker, setCurrentMarker] = useState();
 
   const vals = {
-    currentBooks,
-    currentMarker,
-    setCurrentBooks,
-    setCurrentMarker,
+    currentBooks, setCurrentBooks,
+    currentMarker, setCurrentMarker,
   };
 
   return (

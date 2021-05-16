@@ -5,8 +5,11 @@ import BookDetails from './Book/ListMarker';
 import AddMarker from './Marker/AddMarker';
 import EditMarker from './Marker/EditMarker';
 import EditStore from './Store/EditStore';
+import AddBooks from './NewEntry/AddBooks';
+import AddStore from './NewEntry/AddStore';
 import { Switch, Route } from 'react-router-dom';
 import { useAuth } from './Context/AuthContext';
+import { NewProvider } from './Context/NewContext';
 
 export default function Homepage() {
 
@@ -40,6 +43,12 @@ export default function Homepage() {
         <Route exact path='/Books/:booksId/:markerId' component={EditMarker} />
         {/* Store Details */}
         <Route exact path='/Store/:booksId' component={EditStore} />
+        {/* New Entry */}
+        <NewProvider>
+          {/* New Books | New Store | New Marker */}
+          <Route exact path='/New' component={ AddBooks } />
+          <Route exact path='/New/Store' component={ AddStore } />
+        </NewProvider>
       </Switch>
     </div>
   )

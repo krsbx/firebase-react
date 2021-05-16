@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useBooks } from '../Context/BooksContext';
 import { database } from '../Firebase/FirebaseSDK';
-import { Link, useParams } from 'react-router-dom';
 import { Card, Form, Button, Alert } from 'react-bootstrap';
 
 export default function AddMarker() {
