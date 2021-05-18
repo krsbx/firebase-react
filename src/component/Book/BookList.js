@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../Context/AuthContext';
 import { useBooks } from '../Context/BooksContext';
 import { database } from '../Firebase/FirebaseSDK';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { Card, Button, Form } from 'react-bootstrap';
 
 export default function BookList() {
   const [books, setBooks] = useState([]);
   const [searchParams, setSearchParams] = useState('');
+  const history = useHistory();
   const { LogOut } = useAuth();
   const { setCurrentBooks } = useBooks();
 
@@ -52,6 +53,7 @@ export default function BookList() {
       <Card.Body className='text-center'>
         <h2 className='text-center mb-4'>Books</h2>
         <Button onClick={() => LogOut() }>Log Out</Button>
+        <Button onClick={() => history.push('/New') }>Add Books</Button>
         <Form.Group className='mt-2'>
             <Form.Control type='text' value={searchParams}
             onChange={(e) => setSearchParams(e.target.value)}

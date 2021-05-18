@@ -1,5 +1,7 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import { database } from '../Firebase/FirebaseSDK';
+import { target } from '../Vuforia/VWSHandler';
+import { VWS_Request } from '../Vuforia/VWS_Request';
 
 export const EntryContext = createContext();
 
@@ -15,6 +17,7 @@ export function NewProvider( {children} ) {
   const [Cover, setCover] = useState('');
   const [Publisher, setPublisher] = useState('');
   const [Markers, setMarkers] = useState('');
+  const [MarkerImage, setMarkerImage] = useState({});
   const [Store1, setStore1] = useState('');
   const [Store2, setStore2] = useState('');
   const [Store3, setStore3] = useState('');
@@ -39,6 +42,22 @@ export function NewProvider( {children} ) {
     setReport('');
     setRequest(true);
 
+    const Metadata = {
+      Author: Author,
+      Cover: Cover,
+      Marker: Markers,
+      Model: Model,
+      Name: BookName,
+      Publisher: Publisher,
+      Size: Size,
+      Synopsis: Synopsis,
+    };
+
+    const body = target(Markers, Metadata, MarkerImage);
+    const request = await VWS_Request('POST', body, 'application/json');
+
+    console.log(request);
+
     //Post To Books Sections
     await database.ref('Books').child(BookName).update({
       Author: Author,
@@ -54,16 +73,7 @@ export function NewProvider( {children} ) {
     });
 
     //Post To Marker Sections
-    await database.ref(`Marker`).child(`${BookName}<bookPlat>${Markers}`).update({
-      Author: Author,
-      Cover: Cover,
-      Marker: Markers,
-      Model: Model,
-      Name: BookName,
-      Publisher: Publisher,
-      Size: Size,
-      Synopsis: Synopsis,
-    });
+    await database.ref(`Marker`).child(`${BookName}<bookPlat>${Markers}`).update(Metadata);
 
     //Post To Store Sections
     await database.ref('Store').child(BookName).update({
@@ -85,6 +95,7 @@ export function NewProvider( {children} ) {
     Cover, setCover,
     Publisher, setPublisher,
     Markers, setMarkers,
+    MarkerImage, setMarkerImage,
     Store1, setStore1,
     Store2, setStore2,
     Store3, setStore3,

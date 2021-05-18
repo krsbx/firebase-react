@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEntry } from '../Context/NewContext';
 import { useHistory } from 'react-router-dom';
-import { Card, Form, Button } from 'react-bootstrap';
+import { Card, Form, Row, Button } from 'react-bootstrap';
 
 export default function AddBooks() {
   const history = useHistory();
@@ -14,12 +14,17 @@ export default function AddBooks() {
     Cover, setCover,
     Publisher, setPublisher,
     Markers, setMarkers,
+    setMarkerImage,
   } = useEntry();
 
   const PostBooks = (event) => {
     event.preventDefault();
     
     history.push('/New/Store');
+  }
+
+  const HandleFile = (e) => {
+    setMarkerImage(e.target.files[0]);
   }
 
   return (
@@ -76,10 +81,14 @@ export default function AddBooks() {
             placeholder='Enter Book Publisher Logo Link'
             required/>
           </Form.Group>
-          <Form.Group>
-            <Form.File id="custom-file" label="Custom file input" custom>
-              <Form.Label>Marker Files</Form.Label>
-            </Form.File>
+          <Form.Group as={Row}>
+            <Form.File
+              type='file'
+              label='Marker Image'
+              className='custom-file-label'
+              onChange={ (e) => HandleFile(e) }
+              custom
+            />
           </Form.Group>
           <Button type='submit'
           className='w-100'>Add Books</Button>
