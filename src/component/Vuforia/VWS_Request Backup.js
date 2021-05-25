@@ -1,24 +1,39 @@
 import { URL, createAuthorizations, timestamp } from './VWSHandler';
-import axios from 'axios';
+import https from 'https';
 
-const HttpRequest = async (httpsOptions, body, callback) => {
+const HttpRequest = (httpsOptions, body, callback) => {
+  const request = https.request(httpsOptions, (response) => {
+    let data = '';
 
-  delete axios.defaults.headers.common['User-Agent'];
+    response.setEncoding('utf8');
 
-  const instance = axios.create({
-    baseURL: httpsOptions.url,
-    headers: httpsOptions.headers,
-    responseType: 'json',
+    response.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    response.on('end', () => {
+      try {
+        let result = JSON.parse(data);
+        if (response.statusCode === 200 || response.statusCode === 201) {
+          callback(null, result);
+
+        } else {
+            const error = new Error(result.result_code);
+            callback(error, result);
+        }
+      } catch (error) {
+        callback(error,  {});
+      }
+    });
   });
-  
-  const request = await instance({
-    method: httpsOptions.method,
-    data: body,
+
+  request.on('error', (error) => {
+    callback(error);
   });
 
-  callback(request);
+  request.write(body);
 
-  console.log(request);
+  request.end();
 }
 
 const VWSRequest = (request, callback) => {
@@ -28,11 +43,15 @@ const VWSRequest = (request, callback) => {
 
   var httpsOptions = {
 
-    url: URL+request.path,
+    hostname: URL,
+    path: request.path,
     method: request.method,
     headers: {
-        'Content-Type': request.type,
+
+        'Content-Length': Buffer.byteLength(request.body),
+        'Content-Type': request.contentTypeHeader || request.type,
         'Authorization': createAuthorizations(request),
+        'Date': request.timestamp
     }
   };
 
@@ -42,7 +61,7 @@ const VWSRequest = (request, callback) => {
 export const addTarget = (target, callback) => {
   const request = {
     'path': '/targets',
-    'method': 'post',
+    'method': 'POST',
     'type': 'application/json',
     'body': target
   }
@@ -53,7 +72,7 @@ export const addTarget = (target, callback) => {
 export const updateTarget = (targetId, target, callback) => {
   const request = {
     'path': '/targets/' + targetId,
-    'method': 'put',
+    'method': 'PUT',
     'type': 'application/json',
     'body': target
   };
@@ -65,7 +84,7 @@ export const deleteTarget = (targetId, callback) => {
   const request = {
 
       'path': '/targets/' + targetId,
-      'method': 'delete',
+      'method': 'DELETE',
       'type': 'application/json',
       'body': ''
   };

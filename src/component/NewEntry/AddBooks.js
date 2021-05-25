@@ -25,6 +25,8 @@ export default function AddBooks() {
 
   const HandleFile = (e) => {
     setMarkerImage(e.target.files[0]);
+
+    console.log(e.target.files[0]);
   }
 
   return (
@@ -86,6 +88,7 @@ export default function AddBooks() {
               type='file'
               label='Marker Image'
               className='custom-file-label'
+              accept="image/png, image/jpeg"
               onChange={ (e) => HandleFile(e) }
               custom
             />

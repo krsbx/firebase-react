@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export const URL = 'https://fire-vws.herokuapp.com/https://vws.vuforia.com';
+export const URL = 'fire-vws.herokuapp.com/https://vws.vuforia.com';
 
 export const timestamp = () => {
   const now = new Date();
@@ -60,22 +60,6 @@ export const createAuthorizations = (request) => {
   const authorization = 'VWS ' + request.accessKey + ':' + signature;
 
   return authorization;
-}
-
-export const Header = (method, body, content_type, path) => {
-  const request = {
-    method: method,
-    body: body,
-    content_type: content_type,
-    date: timestamp(),
-    path: path,
-  }
-
-  return {
-    'Date': timestamp,
-    'Content-Type': content_type,
-    'Authorization': 'VWS '+process.env.REACT_APP_ACCESS_KEY+':'+createSignature(request),
-  }
 }
 
 export const getMarker64 = (MarkerImage) => {

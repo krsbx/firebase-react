@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import { database } from '../Firebase/FirebaseSDK';
-import { target } from '../Vuforia/VWSHandler';
-import { VWS_Request } from '../Vuforia/VWS_Request';
+import { target, getMarker64 } from '../Vuforia/VWSHandler';
+import { addTarget } from '../Vuforia/VWS_Request';
 
 export const EntryContext = createContext();
 
@@ -53,35 +53,38 @@ export function NewProvider( {children} ) {
       Synopsis: Synopsis,
     };
 
-    const body = target(Markers, Metadata, MarkerImage);
-    const request = await VWS_Request('POST', body, 'application/json');
+    const images64 = await getMarker64(MarkerImage);
 
-    console.log(request);
+    const newTarget = await target(Markers, Metadata, images64);
+
+    addTarget(newTarget, (response) => {
+      console.log(response);
+    });
 
     //Post To Books Sections
-    await database.ref('Books').child(BookName).update({
-      Author: Author,
-      BookName: BookName,
-      Cover: Cover,
-      Entry: numEnt,
-      Publisher: Publisher,
-    });
+    // await database.ref('Books').child(BookName).update({
+    //   Author: Author,
+    //   BookName: BookName,
+    //   Cover: Cover,
+    //   Entry: numEnt,
+    //   Publisher: Publisher,
+    // });
 
-    //Post To Manager Sections
-    await database.ref('Manager').child(BookName).child(Markers).update({
-      Name: Markers,
-    });
+    // //Post To Manager Sections
+    // await database.ref('Manager').child(BookName).child(Markers).update({
+    //   Name: Markers,
+    // });
 
-    //Post To Marker Sections
-    await database.ref(`Marker`).child(`${BookName}<bookPlat>${Markers}`).update(Metadata);
+    // //Post To Marker Sections
+    // await database.ref(`Marker`).child(`${BookName}<bookPlat>${Markers}`).update(Metadata);
 
-    //Post To Store Sections
-    await database.ref('Store').child(BookName).update({
-      Store1: Store1,
-      Store2: Store2,
-      Store3: Store3,
-      Synopsis: Synopsis,
-    });
+    // //Post To Store Sections
+    // await database.ref('Store').child(BookName).update({
+    //   Store1: Store1,
+    //   Store2: Store2,
+    //   Store3: Store3,
+    //   Synopsis: Synopsis,
+    // });
 
     setReport('Data Updated Successfully!');
     setRequest(false);
