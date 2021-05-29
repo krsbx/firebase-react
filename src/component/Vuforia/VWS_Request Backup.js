@@ -1,4 +1,4 @@
-import { URL, createAuthorizations, timestamp } from './VWSHandler';
+import { URL, createAuthorizations, timestamp } from './VWSHandler Backup';
 import https from 'https';
 
 const HttpRequest = (httpsOptions, body, callback) => {
@@ -60,7 +60,7 @@ const VWSRequest = (request, callback) => {
 
 export const addTarget = (target, callback) => {
   const request = {
-    'path': '/targets',
+    'path': 'https://vws.vuforia.com/targets',
     'method': 'POST',
     'type': 'application/json',
     'body': target
@@ -71,7 +71,7 @@ export const addTarget = (target, callback) => {
 
 export const updateTarget = (targetId, target, callback) => {
   const request = {
-    'path': '/targets/' + targetId,
+    'path': 'https://vws.vuforia.com/targets/' + targetId,
     'method': 'PUT',
     'type': 'application/json',
     'body': target
@@ -83,7 +83,7 @@ export const updateTarget = (targetId, target, callback) => {
 export const deleteTarget = (targetId, callback) => {
   const request = {
 
-      'path': '/targets/' + targetId,
+      'path': 'https://vws.vuforia.com/targets/' + targetId,
       'method': 'DELETE',
       'type': 'application/json',
       'body': ''

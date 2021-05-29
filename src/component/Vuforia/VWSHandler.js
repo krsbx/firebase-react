@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export const URL = 'https://fire-vws.herokuapp.com/https://vws.vuforia.com';
+export const URL = 'http://localhost:3001/api/';
 
 export const timestamp = () => {
   const now = new Date();
@@ -41,17 +41,24 @@ const createSignature = (request) => {
 //Metadata = { JSON }
 //MarkerImage = Image Locations
 export const target = (MarkerName, metadata, MarkerImage) => {
-  return new Promise((resolve, reject) => {
-    const body = {
-      name: MarkerName,
-      width: 50,
-      image: MarkerImage,
-      active_flag: true,
-      application_metadata: getMeta64(metadata),
-    }
-  
-    resolve(JSON.stringify(body));
-  });
+  const body = {
+    'name': MarkerName,
+    'width': 50,
+    'image': MarkerImage,
+    'active_flag': true,
+    'application_metadata': getMeta64(metadata),
+  }
+
+  return JSON.stringify(body);
+}
+
+export const newTarget = (metadata, MarkerImage) => {
+  const body = {
+    'image': MarkerImage,
+    'application_metadata': getMeta64(metadata),
+  }
+
+  return JSON.stringify(body);
 }
 
 export const createAuthorizations = (request) => {
@@ -82,9 +89,7 @@ export const getMarker64 = (MarkerImage) => {
   return new Promise((resolve, reject) => {
     let reader = new FileReader();
     reader.readAsDataURL(MarkerImage);
-    reader.onload = () => {
-      resolve(reader.result);
-    };
+    reader.onload = () => resolve(reader.result.split(',')[1]);
 
     reader.onerror = (error) => reject(error);
   });

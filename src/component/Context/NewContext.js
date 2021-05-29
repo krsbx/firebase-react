@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import { database } from '../Firebase/FirebaseSDK';
-import { target, getMarker64 } from '../Vuforia/VWSHandler';
-import { addTarget } from '../Vuforia/VWS_Request';
+import { target, newTarget, getMarker64 } from '../Vuforia/VWSHandler';
+import { addTarget, updateTarget, deleteTarget } from '../Vuforia/VWS_Request';
 
 export const EntryContext = createContext();
 
@@ -55,11 +55,26 @@ export function NewProvider( {children} ) {
 
     const images64 = await getMarker64(MarkerImage);
 
-    const newTarget = await target(Markers, Metadata, images64);
+    const data = target(Markers, Metadata, images64);
+    // const data = newTarget(Metadata, images64);
 
-    addTarget(newTarget, (response) => {
-      console.log(response);
+    addTarget(data, (response) => {
+      if(response.data !== undefined) {
+        console.log(response.data);
+      }
     });
+
+    // updateTarget('7c4265b6f96a49d8a24d3f8525bb4f59', data, (response) => {
+    //   if(response.data !== undefined) {
+    //     console.log(response.data);
+    //   }
+    // });
+
+    // deleteTarget('7c4265b6f96a49d8a24d3f8525bb4f59', (response) => {
+    //   if(response.data !== undefined) {
+    //     console.log(response.data);
+    //   }
+    // });
 
     //Post To Books Sections
     // await database.ref('Books').child(BookName).update({

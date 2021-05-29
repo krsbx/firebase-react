@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export const URL = 'fire-vws.herokuapp.com/https://vws.vuforia.com';
+export const URL = 'fire-vws.herokuapp.com/';
 
 export const timestamp = () => {
   const now = new Date();
