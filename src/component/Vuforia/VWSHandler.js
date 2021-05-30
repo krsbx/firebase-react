@@ -69,22 +69,6 @@ export const createAuthorizations = (request) => {
   return authorization;
 }
 
-export const Header = (method, body, content_type, path) => {
-  const request = {
-    method: method,
-    body: body,
-    content_type: content_type,
-    date: timestamp(),
-    path: path,
-  }
-
-  return {
-    'Date': timestamp,
-    'Content-Type': content_type,
-    'Authorization': 'VWS '+process.env.REACT_APP_ACCESS_KEY+':'+createSignature(request),
-  }
-}
-
 export const getMarker64 = (MarkerImage) => {
   return new Promise((resolve, reject) => {
     let reader = new FileReader();

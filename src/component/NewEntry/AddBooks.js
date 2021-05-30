@@ -1,7 +1,7 @@
 import React from 'react';
 import { useEntry } from '../Context/NewContext';
 import { useHistory } from 'react-router-dom';
-import { Card, Form, Row, Button } from 'react-bootstrap';
+import { Card, Form, Row, Button, Alert } from 'react-bootstrap';
 
 export default function AddBooks() {
   const history = useHistory();
@@ -15,6 +15,7 @@ export default function AddBooks() {
     Publisher, setPublisher,
     Markers, setMarkers,
     setMarkerImage,
+    report, error, 
   } = useEntry();
 
   const PostBooks = (event) => {
@@ -33,6 +34,8 @@ export default function AddBooks() {
     <Card>
       <Card.Body>
         <h2 className='text-center mb-4'>New Books</h2>
+        { report && <Alert variant='success'> {report} </Alert> }
+        { error && <Alert variant='danger'> {error} </Alert> }
         <Form onSubmit={ PostBooks }>
           <Form.Group className='mb-2'>
             <Form.Label>Book Name</Form.Label>
@@ -91,6 +94,7 @@ export default function AddBooks() {
               accept="image/png, image/jpeg"
               onChange={ (e) => HandleFile(e) }
               custom
+              required
             />
           </Form.Group>
           <Button type='submit'

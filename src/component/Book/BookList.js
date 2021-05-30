@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../Context/AuthContext';
-import { useBooks } from '../Context/BooksContext';
 import { database } from '../Firebase/FirebaseSDK';
 import { Link, useHistory } from 'react-router-dom';
 import { Card, Button, Form } from 'react-bootstrap';
@@ -10,7 +9,6 @@ export default function BookList() {
   const [searchParams, setSearchParams] = useState('');
   const history = useHistory();
   const { LogOut } = useAuth();
-  const { setCurrentBooks } = useBooks();
 
   const GetAllBooks = () => {
     database.ref('Books').on('value', snapshot => {
@@ -20,7 +18,7 @@ export default function BookList() {
 
         setBooks(temp);
       }
-    })
+    });
   }
 
   useEffect(() => {
@@ -38,8 +36,7 @@ export default function BookList() {
     }).map( function (key, index) {
       return (
         <div key={key} className='pt-2 pb-2'>
-          <Link to={`/Books/${key}`} style={{ textDecoration: 'none', color: 'black' }}
-          onClick={() => setCurrentBooks(key)}>
+          <Link to={`/Books/${key}`} style={{ textDecoration: 'none', color: 'black' }} >
             {`${books[key]['BookName']} by ${books[key]['Author']}`}
           </Link>
       </div>);

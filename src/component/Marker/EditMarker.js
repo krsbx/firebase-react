@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useBooks } from '../Context/BooksContext';
 import { database } from '../Firebase/FirebaseSDK';
-import { Link, useParams } from 'react-router-dom';
-import { Card, Form, Button, Alert } from 'react-bootstrap';
+import { useParams, useHistory } from 'react-router-dom';
+import { Card, Form, Row, Button, Alert } from 'react-bootstrap';
+import { newTarget, getMarker64 } from '../Vuforia/VWSHandler';
+import { updateTarget, deleteTarget } from '../Vuforia/VWS_Request';
 
 export default function EditMarker() {
   const [BookName, setBookName] = useState('');
@@ -13,14 +14,18 @@ export default function EditMarker() {
   const [Publisher, setPublisher] = useState('');
   const [Markers, setMarkers] = useState('');
   const [Synopsis, setSynopsis] = useState('');
+  const [UID, setUID] = useState('');
+  const [MarkerImage, setMarkerImage] = useState({});
   const [requesting, setRequest] = useState(false);
   const [report, setReport] = useState('');
+  const [error, setError] = useState('');
 
-  const { currentBooks } = useBooks();
-  const { markerId } = useParams();
+  const history = useHistory();
+
+  const { booksId, markerId } = useParams();
 
   const GetMarkerDetails = () => {
-    database.ref(`Books`).child(`${currentBooks}`).on('value', snapshot => {
+    database.ref(`Books`).child(`${booksId}`).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
         setAuthor(result['Author']);
@@ -29,9 +34,16 @@ export default function EditMarker() {
         setPublisher(result['Publisher']);
       }
     });
+
+    database.ref(`Cloud Reco`).child(`${booksId}<bookPlat>${markerId}`).get().then(snapshot => {
+      if (snapshot.exists()) {
+        const result = snapshot.val();
+        setUID(result['UID']);
+      }
+    });
     
-    database.ref(`Marker`).child(`${currentBooks}<bookPlat>${markerId}`).on('value', snapshot => {
-      if(snapshot.exists()){
+    database.ref(`Marker`).child(`${booksId}<bookPlat>${markerId}`).get().then(snapshot => {
+      if (snapshot.exists()) {
         const result = snapshot.val();
         setModel(result['Model']);
         setSize(result['Size']);
@@ -39,7 +51,7 @@ export default function EditMarker() {
       }
     });
 
-    database.ref('Store').child(currentBooks).on('value', snapshot => {
+    database.ref('Store').child(`${booksId}`).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
         setSynopsis(result['Synopsis']);
@@ -47,18 +59,16 @@ export default function EditMarker() {
     });
   };
 
+  // #region Update Functions
+
   const UpdateMarker = async (event) => {
     event.preventDefault();
 
     setReport('');
+    setError('');
     setRequest(true);
 
-    await database.ref('Books').child(currentBooks).update({
-      Cover: Cover,
-      Publisher: Publisher,
-    });
-
-    await database.ref(`Marker`).child(`${currentBooks}<bookPlat>${markerId}`).update({
+    const Metadata = {
       Author: Author,
       Cover: Cover,
       Marker: Markers,
@@ -67,11 +77,103 @@ export default function EditMarker() {
       Publisher: Publisher,
       Size: Size,
       Synopsis: Synopsis,
-    });
+    };
 
-    setReport('Data Updated Successfully!');
+    const images64 = await getMarker64(MarkerImage);
+
+    const data = newTarget(Metadata, images64);
+
+    const request = await updateTarget(UID, data);
+
+    try {
+      if (request.data['result_code'] === 'Success'){
+        await database.ref('Books').child(booksId).update({
+          Cover: Cover,
+          Publisher: Publisher,
+        });
+    
+        await database.ref(`Marker`).child(`${booksId}<bookPlat>${markerId}`).update({
+          Author: Author,
+          Cover: Cover,
+          Marker: Markers,
+          Model: Model,
+          Name: BookName,
+          Publisher: Publisher,
+          Size: Size,
+          Synopsis: Synopsis,
+        });
+    
+        setReport('Data Updated Successfully!');
+      } else {
+        setError(request.data['result_code']);
+      }
+    } catch {
+      setError('Bad Request');
+    }
+
     setRequest(false);
   }
+
+  const HandleFile = (e) => {
+    setMarkerImage(e.target.files[0]);
+
+    console.log(e.target.files[0]);
+  }
+
+  // #endregion
+
+  // #region Delete Marker
+  
+  const DeleteMarker = async () => {
+
+    setReport('');
+    setError('');
+    setRequest(true);
+    
+    const request = await deleteTarget(UID);
+
+    try {
+      if (request.data['result_code'] === 'Success') {
+        //Remove Marker Entry on Cloud Reco Sections
+        await database.ref(`Cloud Reco`).child(`${booksId}<bookPlat>${markerId}`).remove();
+
+        //Remove Marker Entry on Manager Sections
+        await database.ref(`Manager`).child(`${booksId}`).child(`${markerId}`).remove();
+
+        //Remove Marker Entry on Marker Sections
+        await database.ref(`Marker`).child(`${booksId}<bookPlat>${markerId}`).remove();
+
+        let existed = false;
+
+        database.ref(`Manager`).child(`${booksId}`).get().then(snapshot => {
+          existed = snapshot.exists();
+        });
+
+        setReport('Marker Deleted Successfully!');
+
+        setTimeout(3000);
+
+        //No Entry found
+        //  Remove Books Entry
+        if (existed === false) {
+          database.ref(`Books`).child(`${booksId}`).remove();
+          database.ref(`Store`).child(`${booksId}`).remove();
+          history.push('/');
+        } else {
+          history.push(`/Books/${booksId}`);
+        }
+        
+      } else {
+        setError(request.data['result_code']);
+      }
+    } catch {
+      setError('Bad Request');
+    }
+
+    setRequest(false);
+  };
+  
+  // #endregion
 
   useEffect(() => {
     GetMarkerDetails();
@@ -82,6 +184,7 @@ export default function EditMarker() {
       <Card.Body>
         <h2 className='text-center mb-4'>{ Markers }</h2>
         { report && <Alert variant='success'> {report} </Alert> }
+        { error && <Alert variant='danger'> {error} </Alert> }
         <Form onSubmit={ UpdateMarker }>
           <Form.Group className='mb-2'>
             <Form.Label>Book Name</Form.Label>
@@ -125,8 +228,21 @@ export default function EditMarker() {
             placeholder='Enter Book Publisher Logo Link'
             required/>
           </Form.Group>
+          <Form.Group as={Row}>
+            <Form.File
+              type='file'
+              label='Marker Image'
+              className='custom-file-label'
+              accept="image/png, image/jpeg"
+              onChange={ (e) => HandleFile(e) }
+              custom
+              required
+            />
+          </Form.Group>
           <Button type='submit' disabled={ requesting }
           className='w-100'>Update Marker</Button>
+          <Button onClick={ () => DeleteMarker() } disabled={ requesting }
+          className='btn btn-danger w-100'>Delete Marker</Button>
         </Form>
       </Card.Body>
     </Card>

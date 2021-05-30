@@ -10,15 +10,17 @@ export default function AddStore() {
     Store2, setStore2,
     Store3, setStore3,
     Synopsis, setSynopsis,
-    report, requesting,
-    PostBooksStore
+    report, error, 
+    requesting,
+    PostBooksStore, 
   } = useEntry();
 
   return (
     <Card>
       <Card.Body>
         <h2 className='text-center mb-4'>{ BookName }</h2>
-        { report && <Alert variant='success'> { report } </Alert> }
+        { report && <Alert variant='success'> {report} </Alert> }
+        { error && <Alert variant='danger'> {error} </Alert> }
         <Form onSubmit={ PostBooksStore }>
           <Form.Group className='mb-2'>
             <Form.Label>Store 1 Link</Form.Label>

@@ -1,10 +1,7 @@
 import { URL, createAuthorizations, timestamp } from './VWSHandler';
 import axios from 'axios';
 
-const HttpRequest = async (httpsOptions, body, callback) => {
-
-  delete axios.defaults.headers.common['User-Agent'];
-
+const HttpRequest = async (httpsOptions, body) => {
   const instance = axios.create({
     baseURL: httpsOptions.url,
     headers: httpsOptions.headers,
@@ -18,10 +15,12 @@ const HttpRequest = async (httpsOptions, body, callback) => {
     console.log(error);
   });
 
-  callback(request);
+  return new Promise((resolve, reject) => {
+    resolve(request);
+  });
 }
 
-const VWSRequest = (request, callback) => {
+const VWSRequest = async (request) => {
   request.accessKey = process.env.REACT_APP_ACCESS_KEY;
   request.secretKey = process.env.REACT_APP_SECRET_KEY;
   request.timestamp = timestamp();
@@ -36,10 +35,14 @@ const VWSRequest = (request, callback) => {
     }
   };
 
-  HttpRequest(httpsOptions, request.body, callback);
+  const result = await HttpRequest(httpsOptions, request.body);
+
+  return new Promise((resolve, reject) => {
+    resolve(result);
+  });
 }
 
-export const addTarget = (target, callback) => {
+export const addTarget = async (target) => {
   const request = {
     'path': '',
     'method': 'post',
@@ -47,10 +50,14 @@ export const addTarget = (target, callback) => {
     'body': target
   }
 
-  VWSRequest(request, callback);
+  const result = await VWSRequest(request);
+
+  return new Promise((resolve, reject) => {
+    resolve(result);
+  });
 }
 
-export const updateTarget = (targetId, target, callback) => {
+export const updateTarget = async (targetId, target) => {
   const request = {
     'path': targetId,
     'method': 'put',
@@ -58,10 +65,14 @@ export const updateTarget = (targetId, target, callback) => {
     'body': target
   };
 
-  VWSRequest(request, callback);
+  const result = await VWSRequest(request);
+  
+  return new Promise((resolve, reject) => {
+    resolve(result);
+  });
 }
 
-export const deleteTarget = (targetId, callback) => {
+export const deleteTarget = async (targetId) => {
   const request = {
 
       'path': targetId,
@@ -70,5 +81,9 @@ export const deleteTarget = (targetId, callback) => {
       'body': ''
   };
 
-  VWSRequest(request, callback);
+  const result = await VWSRequest(request);
+  
+  return new Promise((resolve, reject) => {
+    resolve(result);
+  });
 };

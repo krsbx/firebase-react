@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useBooks } from '../Context/BooksContext';
 import { database } from '../Firebase/FirebaseSDK';
-import { Card, Form, Button, Alert } from 'react-bootstrap';
+import { useParams, useHistory } from 'react-router-dom';
+import { Card, Form, Row, Button, Alert } from 'react-bootstrap';
+import { target, getMarker64 } from '../Vuforia/VWSHandler';
+import { addTarget } from '../Vuforia/VWS_Request';
 
 export default function AddMarker() {
   const [BookName, setBookName] = useState('');
@@ -12,13 +14,16 @@ export default function AddMarker() {
   const [Publisher, setPublisher] = useState('');
   const [Markers, setMarkers] = useState('');
   const [Synopsis, setSynopsis] = useState('');
+  const [MarkerImage, setMarkerImage] = useState({});
   const [requesting, setRequest] = useState(false);
   const [report, setReport] = useState('');
+  const [error, setError] = useState('');
+  const history = useHistory();
 
-  const { currentBooks } = useBooks();
+  const { booksId } = useParams();
 
   const GetBookInformations = () => {
-    database.ref(`Books`).child(`${currentBooks}`).on('value', snapshot => {
+    database.ref(`Books`).child(`${booksId}`).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
         setAuthor(result['Author']);
@@ -28,26 +33,41 @@ export default function AddMarker() {
       }
     });
 
-    database.ref('Store').child(currentBooks).on('value', snapshot => {
+    database.ref(`Books`).child(`${booksId}`).off('value');
+
+    database.ref('Store').child(booksId).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
         setSynopsis(result['Synopsis']);
       }
     });
+
+    database.ref(`Store`).child(`${booksId}`).off('value');
   };
 
   const UploadMarker = async (event) => {
     event.preventDefault();
 
     setReport('');
+    setError('');
     setRequest(true);
 
-    await database.ref('Books').child(currentBooks).update({
-      Cover: Cover,
-      Publisher: Publisher,
+    let existed = false;
+
+    database.ref('Manager').child(booksId).child(`${Markers}`).get().then(snapshot => {
+      if(snapshot.exists()){
+        setError('Marker Already Exist!');
+        setRequest(false);
+        existed = true;
+        return;
+      }
     });
 
-    await database.ref(`Marker`).child(`${currentBooks}<bookPlat>${Markers}`).update({
+    if (existed === true) {
+      return;
+    }
+
+    const Metadata = {
       Author: Author,
       Cover: Cover,
       Marker: Markers,
@@ -56,14 +76,63 @@ export default function AddMarker() {
       Publisher: Publisher,
       Size: Size,
       Synopsis: Synopsis,
-    });
+    };
 
-    await database.ref('Manager').child(currentBooks).child(Markers).update({
-      Name: Markers,
-    });
+    const images64 = await getMarker64(MarkerImage);
 
-    setReport('Marker Uploaded Successfully!');
+    const data = target(`${booksId}<bookPlat>${Markers}`, Metadata, images64);
+
+    const request = await addTarget(data);
+
+    try {
+      if (request.data['result_code'] === 'TargetCreated'){
+        //Update Books Informations
+        await database.ref('Books').child(booksId).update({
+          Cover: Cover,
+          Publisher: Publisher,
+        });
+
+        //Add New Marker To Cloud Reco Sections
+        await database.ref('Cloud Reco').child(booksId).update({
+          UID: request.data['target_id'],
+        });
+
+        //Add New Marker To Manager Sections
+        await database.ref('Manager').child(booksId).child(Markers).update({
+          Name: Markers,
+        });
+
+        //Add New Marker To Marker Sections
+        await database.ref(`Marker`).child(`${booksId}<bookPlat>${Markers}`).update({
+          Author: Author,
+          Cover: Cover,
+          Marker: Markers,
+          Model: Model,
+          Name: BookName,
+          Publisher: Publisher,
+          Size: Size,
+          Synopsis: Synopsis,
+        });
+
+        setReport('Marker Uploaded Successfully!');
+
+        setTimeout(3000);
+
+        history.push(`/Books/${booksId}`);
+      } else {
+        setError(request.data['result_code']);
+      }
+    } catch {
+      setError('Bad Request!');
+    }
+
     setRequest(false);
+  }
+
+  const HandleFile = (e) => {
+    setMarkerImage(e.target.files[0]);
+
+    console.log(e.target.files[0]);
   }
 
   useEffect(() => {
@@ -75,6 +144,7 @@ export default function AddMarker() {
       <Card.Body>
         <h2 className='text-center mb-4'>{ BookName }</h2>
         { report && <Alert variant='success'> {report} </Alert> }
+        { error && <Alert variant='danger'> {error} </Alert> }
         <Form onSubmit={ UploadMarker }>
           <Form.Group className='mb-2'>
             <Form.Label>Book Name</Form.Label>
@@ -124,6 +194,17 @@ export default function AddMarker() {
             onChange={(e) => setPublisher(e.target.value)}
             placeholder='Enter Book Publisher Logo Link'
             required/>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Form.File
+              type='file'
+              label='Marker Image'
+              className='custom-file-label'
+              accept="image/png, image/jpeg"
+              onChange={ (e) => HandleFile(e) }
+              custom
+              required
+            />
           </Form.Group>
           <Button type='submit' disabled={ requesting }
           className='w-100'>Upload Marker</Button>

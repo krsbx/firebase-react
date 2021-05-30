@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import { database } from '../Firebase/FirebaseSDK';
-import { target, newTarget, getMarker64 } from '../Vuforia/VWSHandler';
-import { addTarget, updateTarget, deleteTarget } from '../Vuforia/VWS_Request';
+import { target, getMarker64 } from '../Vuforia/VWSHandler';
+import { addTarget } from '../Vuforia/VWS_Request';
+import { useHistory } from 'react-router-dom';
 
 export const EntryContext = createContext();
 
@@ -23,8 +24,10 @@ export function NewProvider( {children} ) {
   const [Store3, setStore3] = useState('');
   const [Synopsis, setSynopsis] = useState('');
   const [report, setReport] = useState('');
+  const [error, setError] = useState('');
   const [requesting, setRequest] = useState(false);
   const [numEnt, setNumEnt] = useState();
+  const history = useHistory();
 
   const GetEntry = () => {
     database.ref('Books').on('value', snapshot => {
@@ -40,7 +43,25 @@ export function NewProvider( {children} ) {
     event.preventDefault();
 
     setReport('');
+    setError('');
     setRequest(true);
+
+    let existed = false;
+
+    database.ref('Books').child(`${BookName}<bookPlat>${Author}`).on('value', snapshot => {
+      if(snapshot.exists()){
+        setError('Books Already Exist!');
+        setRequest(false);
+        existed = true;
+        return;
+      }
+    });
+
+    if (existed === true) {
+      return;
+    }
+
+    database.ref('Books').child(`${BookName}<bookPlat>${Author}`).off('value');
 
     const Metadata = {
       Author: Author,
@@ -55,53 +76,58 @@ export function NewProvider( {children} ) {
 
     const images64 = await getMarker64(MarkerImage);
 
-    const data = target(Markers, Metadata, images64);
-    // const data = newTarget(Metadata, images64);
+    const data = target(`${BookName}<bookPlat>${Author}<bookPlat>${Markers}`, Metadata, images64);
 
-    addTarget(data, (response) => {
-      if(response.data !== undefined) {
-        console.log(response.data);
+    const request = await addTarget(data);
+
+    try {
+      if (request.data['result_code'] === 'TargetCreated'){
+
+        const bookPath = `${BookName}<bookPlat>${Author}`;
+
+        //Post To Books Sections
+        await database.ref('Books').child(bookPath).update({
+          Author: Author,
+          BookName: BookName,
+          Cover: Cover,
+          Entry: numEnt,
+          Publisher: Publisher,
+        });
+
+        //Post To Cloud Reco Sections
+        await database.ref('Cloud Reco').child(`${bookPath}<bookPlat>${Markers}`).update({
+          UID: request.data['target_id'],
+        });
+
+        //Post To Manager Sections
+        await database.ref('Manager').child(bookPath).child(Markers).update({
+          Name: Markers,
+        });
+
+        //Post To Marker Sections
+        await database.ref(`Marker`).child(`${BookName}<bookPlat>${Author}<bookPlat>${Markers}`).update(Metadata);
+
+        //Post To Store Sections
+        await database.ref('Store').child(bookPath).update({
+          Store1: Store1,
+          Store2: Store2,
+          Store3: Store3,
+          Synopsis: Synopsis,
+        });
+
+        setReport('Data Updated Successfully!');
+
+        setTimeout(3000);
+
+        history.push(`/`);
+
+      } else {
+        setError(request.data['result_code']);
       }
-    });
+    } catch {
+      setError('Bad Request!');
+    }
 
-    // updateTarget('7c4265b6f96a49d8a24d3f8525bb4f59', data, (response) => {
-    //   if(response.data !== undefined) {
-    //     console.log(response.data);
-    //   }
-    // });
-
-    // deleteTarget('7c4265b6f96a49d8a24d3f8525bb4f59', (response) => {
-    //   if(response.data !== undefined) {
-    //     console.log(response.data);
-    //   }
-    // });
-
-    //Post To Books Sections
-    // await database.ref('Books').child(BookName).update({
-    //   Author: Author,
-    //   BookName: BookName,
-    //   Cover: Cover,
-    //   Entry: numEnt,
-    //   Publisher: Publisher,
-    // });
-
-    // //Post To Manager Sections
-    // await database.ref('Manager').child(BookName).child(Markers).update({
-    //   Name: Markers,
-    // });
-
-    // //Post To Marker Sections
-    // await database.ref(`Marker`).child(`${BookName}<bookPlat>${Markers}`).update(Metadata);
-
-    // //Post To Store Sections
-    // await database.ref('Store').child(BookName).update({
-    //   Store1: Store1,
-    //   Store2: Store2,
-    //   Store3: Store3,
-    //   Synopsis: Synopsis,
-    // });
-
-    setReport('Data Updated Successfully!');
     setRequest(false);
   }
 
@@ -119,8 +145,9 @@ export function NewProvider( {children} ) {
     Store3, setStore3,
     Synopsis, setSynopsis,
     report, setReport,
+    error, setError,
     requesting, setRequest,
-    PostBooksStore
+    PostBooksStore,
   }
   
   return (

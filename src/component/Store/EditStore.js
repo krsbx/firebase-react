@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useBooks } from '../Context/BooksContext';
 import { database } from '../Firebase/FirebaseSDK';
 import { Link, useParams } from 'react-router-dom';
 import { Card, Form, Button, Alert } from 'react-bootstrap';
@@ -15,17 +14,17 @@ export default function EditStore() {
   const [requesting, setRequest] = useState(false);
   const [report, setReport] = useState('');
 
-  const { currentBooks } = useBooks();
+  const { booksId } = useParams();
 
   const GetStore = () => {
-    database.ref('Books').child(currentBooks).on('value', snapshot => {
+    database.ref('Books').child(booksId).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
         setBookName(result['BookName']);
       }
     });
 
-    database.ref('Store').child(currentBooks).on('value', snapshot => {
+    database.ref('Store').child(booksId).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
         setStore1(result['Store1']);
@@ -42,7 +41,7 @@ export default function EditStore() {
     setReport('');
     setRequest(true);
 
-    await database.ref('Store').child(currentBooks).update({
+    await database.ref('Store').child(booksId).update({
       Store1: Store1,
       Store2: Store2,
       Store3: Store3,
