@@ -1,6 +1,5 @@
 import { useState, useEffect, useContext, createContext } from 'react';
 import { auth } from '../Firebase/FirebaseSDK';
-import { useHistory } from 'react-router-dom';
 
 export const AuthContext = createContext();
 
@@ -8,10 +7,9 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-export function AuthProvider({children}) {
+export function AuthProvider( { children } ) {
   const [currentUser, setCurrentUser] = useState();
   const [loading, setLoading] = useState(true);
-  const history = useHistory();
 
   function SignUp(email, password) {
     return auth.createUserWithEmailAndPassword(email, password);
@@ -42,8 +40,7 @@ export function AuthProvider({children}) {
   };
 
   return (
-    <AuthContext.Provider value={vals}>
-      { !currentUser && history.push(`/Login`) }
+    <AuthContext.Provider value={ vals }>
       { !loading && children }
     </AuthContext.Provider>
   )

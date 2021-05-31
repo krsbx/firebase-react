@@ -79,8 +79,8 @@ export const getMarker64 = (MarkerImage) => {
   });
 }
 
-const getMeta64 = (metadata) => {
-  const buffer = new Buffer(JSON.stringify(metadata));
+export const getMeta64 = (metadata) => {
+  const buffer = new Buffer.from(JSON.stringify(metadata));
 
   return buffer.toString('base64');
 }

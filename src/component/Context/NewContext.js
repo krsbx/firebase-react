@@ -11,7 +11,7 @@ export function useEntry () {
   return useContext(EntryContext);
 }
 
-export function NewProvider( {children} ) {
+export function NewProvider( { children } ) {
   const [BookName, setBookName] = useState('');
   const [Author, setAuthor] = useState('');
   const [Model, setModel] = useState('');
@@ -124,7 +124,7 @@ export function NewProvider( {children} ) {
 
         setTimeout(3000);
 
-        history.push(`/`);
+        history.push(`/Books/`);
 
       } else {
         setError(request.data['result_code']);
@@ -156,7 +156,7 @@ export function NewProvider( {children} ) {
   }
   
   return (
-    <EntryContext.Provider value={vals}>
+    <EntryContext.Provider value={ vals }>
       { children }
     </EntryContext.Provider>
   )

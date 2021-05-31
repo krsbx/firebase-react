@@ -111,6 +111,11 @@ export default function EditMarker() {
         });
     
         setReport('Data Updated Successfully!');
+
+        setTimeout(3000);
+
+        history.push(`/Books`);
+
       } else {
         setError(request.data['result_code']);
       }

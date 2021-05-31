@@ -1,5 +1,31 @@
-import { URL, createAuthorizations, timestamp } from './VWSHandler';
+import { URL, getMeta64 } from './VWSHandler';
+import firebase from '../Firebase/FirebaseSDK';
 import axios from 'axios';
+
+const remoteConfig = firebase.remoteConfig();
+
+remoteConfig.defaultConfig = {
+  'serverAccessKey': process.env.REACT_APP_ACCESS_KEY,
+  'serverSecretKey': process.env.REACT_APP_SECRET_KEY,
+}
+
+let serverAccessKey = '';
+let serverSecretKey = '';
+
+const FetchActive = async () => {
+  await remoteConfig.fetchAndActivate();
+
+  serverAccessKey = remoteConfig.getString('AccessKey');
+  serverSecretKey = remoteConfig.getString('SecretKey');
+
+  return new Promise((resolve, reject) => {
+    resolve({
+      accessKey : serverAccessKey,
+      secretKey : serverSecretKey,
+    });
+  })
+}
+
 
 const HttpRequest = async (httpsOptions, body) => {
   const instance = axios.create({
@@ -21,21 +47,36 @@ const HttpRequest = async (httpsOptions, body) => {
 }
 
 const VWSRequest = async (request) => {
-  request.accessKey = process.env.REACT_APP_ACCESS_KEY;
-  request.secretKey = process.env.REACT_APP_SECRET_KEY;
-  request.timestamp = timestamp();
+  let body = {};
+
+  
+  if ( request.method !== 'delete' ) {
+    body = JSON.parse(request.body);
+  }
+  
+  if ( !serverAccessKey && !serverSecretKey ) {
+    await FetchActive();
+  }
+
+  const BaseKey = {
+    serverAccessKey : serverAccessKey,
+    serverSecretKey : serverSecretKey,
+  }
+
+  const Key64 = getMeta64(BaseKey);
+
+  body.VWSKey = Key64;
 
   var httpsOptions = {
 
     url: URL+request.path,
     method: request.method,
     headers: {
-        'Content-Type': request.type,
-        'Authorization': createAuthorizations(request),
+      'Content-Type': request.type,
     }
   };
 
-  const result = await HttpRequest(httpsOptions, request.body);
+  const result = await HttpRequest(httpsOptions, JSON.stringify(body));
 
   return new Promise((resolve, reject) => {
     resolve(result);

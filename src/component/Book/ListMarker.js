@@ -143,7 +143,7 @@ export default function ListMarker() {
         <Form.Group className='mt-2'>
             <Form.Control type='text' value={searchParams}
             onChange={(e) => setSearchParams(e.target.value)}
-            placeholder='Search Books'
+            placeholder='Search Marker'
             required/>
         </Form.Group>
         <div className='scrollThings' style={{ overflow: 'auto', minHeight: '100px', maxHeight: '600px' }}>
