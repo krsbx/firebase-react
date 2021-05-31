@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { database } from '../Firebase/FirebaseSDK';
+import { database, timestamp } from '../Firebase/FirebaseSDK';
 import { useParams, useHistory } from 'react-router-dom';
-import { Card, Form, Row, Button, Alert } from 'react-bootstrap';
+import { Card, Form, Row, Button, Alert, FormControl } from 'react-bootstrap';
 import { target, getMarker64 } from '../Vuforia/VWSHandler';
 import { addTarget } from '../Vuforia/VWS_Request';
+import { useBooks } from '../Context/BooksContext';
 
 export default function AddMarker() {
   const [BookName, setBookName] = useState('');
@@ -20,10 +21,12 @@ export default function AddMarker() {
   const [error, setError] = useState('');
   const history = useHistory();
 
+  const { currentMode } = useBooks();
+
   const { booksId } = useParams();
 
   const GetBookInformations = () => {
-    database.ref(`Books`).child(`${booksId}`).get().then(snapshot => {
+    database.ref(`${currentMode}Books`).child(`${booksId}`).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
         setAuthor(result['Author']);
@@ -33,16 +36,12 @@ export default function AddMarker() {
       }
     });
 
-    database.ref(`Books`).child(`${booksId}`).off('value');
-
-    database.ref('Store').child(booksId).get().then(snapshot => {
+    database.ref(`${currentMode}Store`).child(booksId).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
         setSynopsis(result['Synopsis']);
       }
     });
-
-    database.ref(`Store`).child(`${booksId}`).off('value');
   };
 
   const UploadMarker = async (event) => {
@@ -54,7 +53,7 @@ export default function AddMarker() {
 
     let existed = false;
 
-    database.ref('Manager').child(booksId).child(`${Markers}`).get().then(snapshot => {
+    database.ref(`${currentMode}Manager`).child(booksId).child(`${Markers}`).get().then(snapshot => {
       if(snapshot.exists()){
         setError('Marker Already Exist!');
         setRequest(false);
@@ -87,23 +86,25 @@ export default function AddMarker() {
     try {
       if (request.data['result_code'] === 'TargetCreated'){
         //Update Books Informations
-        await database.ref('Books').child(booksId).update({
+        await database.ref(`${currentMode}Books`).child(booksId).update({
           Cover: Cover,
           Publisher: Publisher,
         });
 
         //Add New Marker To Cloud Reco Sections
-        await database.ref('Cloud Reco').child(booksId).update({
+        await database.ref(`${currentMode}Cloud Reco`).child(`${booksId}<bookPlat>${Markers}`).update({
           UID: request.data['target_id'],
         });
 
         //Add New Marker To Manager Sections
-        await database.ref('Manager').child(booksId).child(Markers).update({
+        await database.ref(`${currentMode}Manager`).child(booksId).child(Markers).update({
           Name: Markers,
+          createdAt: timestamp,
+          updatedAt: timestamp,
         });
 
         //Add New Marker To Marker Sections
-        await database.ref(`Marker`).child(`${booksId}<bookPlat>${Markers}`).update({
+        await database.ref(`${currentMode}Marker`).child(`${booksId}<bookPlat>${Markers}`).update({
           Author: Author,
           Cover: Cover,
           Marker: Markers,
@@ -196,15 +197,17 @@ export default function AddMarker() {
             required/>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.File
-              type='file'
-              label='Marker Image'
-              className='custom-file-label'
-              accept="image/png, image/jpeg"
-              onChange={ (e) => HandleFile(e) }
-              custom
-              required
-            />
+            <div className='mb-3'>
+              <label htmlFor="formFile">Marker Image</label>
+              <input
+                type='file'
+                className="form-control"
+                accept="image/png, image/jpeg"
+                onChange={ (e) => HandleFile(e) }
+                id="formFile"
+                required
+              />
+            </div>
           </Form.Group>
           <Button type='submit' disabled={ requesting }
           className='w-100'>Upload Marker</Button>

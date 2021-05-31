@@ -7,12 +7,10 @@ export function useBooks() {
 }
 
 export function BooksProvider({children}) {
-  const [currentBooks, setCurrentBooks] = useState();
-  const [currentMarker, setCurrentMarker] = useState();
+  const [currentMode, setCurrentMode] = useState('');
 
   const vals = {
-    currentBooks, setCurrentBooks,
-    currentMarker, setCurrentMarker,
+    currentMode, setCurrentMode,
   };
 
   return (

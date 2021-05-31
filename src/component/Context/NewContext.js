@@ -1,8 +1,9 @@
 import { useState, useEffect, useContext, createContext } from 'react';
-import { database } from '../Firebase/FirebaseSDK';
+import { database, timestamp } from '../Firebase/FirebaseSDK';
 import { target, getMarker64 } from '../Vuforia/VWSHandler';
 import { addTarget } from '../Vuforia/VWS_Request';
 import { useHistory } from 'react-router-dom';
+import { useBooks } from './BooksContext';
 
 export const EntryContext = createContext();
 
@@ -29,8 +30,10 @@ export function NewProvider( {children} ) {
   const [numEnt, setNumEnt] = useState();
   const history = useHistory();
 
+  const { currentMode } = useBooks();
+
   const GetEntry = () => {
-    database.ref('Books').on('value', snapshot => {
+    database.ref(`${currentMode}Books`).on('value', snapshot => {
       setNumEnt(snapshot.numChildren()+1);
     });
   }
@@ -48,7 +51,7 @@ export function NewProvider( {children} ) {
 
     let existed = false;
 
-    database.ref('Books').child(`${BookName}<bookPlat>${Author}`).on('value', snapshot => {
+    database.ref(`${currentMode}Books`).child(`${BookName}<bookPlat>${Author}`).on('value', snapshot => {
       if(snapshot.exists()){
         setError('Books Already Exist!');
         setRequest(false);
@@ -61,7 +64,7 @@ export function NewProvider( {children} ) {
       return;
     }
 
-    database.ref('Books').child(`${BookName}<bookPlat>${Author}`).off('value');
+    database.ref(`${currentMode}Books`).child(`${BookName}<bookPlat>${Author}`).off('value');
 
     const Metadata = {
       Author: Author,
@@ -86,7 +89,7 @@ export function NewProvider( {children} ) {
         const bookPath = `${BookName}<bookPlat>${Author}`;
 
         //Post To Books Sections
-        await database.ref('Books').child(bookPath).update({
+        await database.ref(`${currentMode}Books`).child(bookPath).update({
           Author: Author,
           BookName: BookName,
           Cover: Cover,
@@ -95,20 +98,22 @@ export function NewProvider( {children} ) {
         });
 
         //Post To Cloud Reco Sections
-        await database.ref('Cloud Reco').child(`${bookPath}<bookPlat>${Markers}`).update({
+        await database.ref(`${currentMode}Cloud Reco`).child(`${bookPath}<bookPlat>${Markers}`).update({
           UID: request.data['target_id'],
         });
 
         //Post To Manager Sections
-        await database.ref('Manager').child(bookPath).child(Markers).update({
+        await database.ref(`${currentMode}Manager`).child(bookPath).child(Markers).update({
           Name: Markers,
+          createdAt: timestamp,
+          updatedAt: timestamp,
         });
 
         //Post To Marker Sections
-        await database.ref(`Marker`).child(`${BookName}<bookPlat>${Author}<bookPlat>${Markers}`).update(Metadata);
+        await database.ref(`${currentMode}Marker`).child(`${BookName}<bookPlat>${Author}<bookPlat>${Markers}`).update(Metadata);
 
         //Post To Store Sections
-        await database.ref('Store').child(bookPath).update({
+        await database.ref(`${currentMode}Store`).child(bookPath).update({
           Store1: Store1,
           Store2: Store2,
           Store3: Store3,

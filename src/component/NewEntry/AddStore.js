@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEntry } from '../Context/NewContext';
 import { Card, Form, Button, Alert } from 'react-bootstrap';
+import { useHistory } from 'react-router-dom';
 
 export default function AddStore() {
 
@@ -15,10 +16,13 @@ export default function AddStore() {
     PostBooksStore, 
   } = useEntry();
 
+  const history = useHistory();
+
   return (
     <Card>
       <Card.Body>
         <h2 className='text-center mb-4'>{ BookName }</h2>
+        { !BookName && history.push(`/New`) }
         { report && <Alert variant='success'> {report} </Alert> }
         { error && <Alert variant='danger'> {error} </Alert> }
         <Form onSubmit={ PostBooksStore }>

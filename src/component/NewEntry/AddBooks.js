@@ -87,15 +87,17 @@ export default function AddBooks() {
             required/>
           </Form.Group>
           <Form.Group as={Row}>
-            <Form.File
-              type='file'
-              label='Marker Image'
-              className='custom-file-label'
-              accept="image/png, image/jpeg"
-              onChange={ (e) => HandleFile(e) }
-              custom
-              required
-            />
+            <div className='mb-3'>
+              <label htmlFor="formFile">Marker Image</label>
+              <input
+                type='file'
+                className="form-control"
+                accept="image/png, image/jpeg"
+                onChange={ (e) => HandleFile(e) }
+                id="formFile"
+                required
+              />
+            </div>
           </Form.Group>
           <Button type='submit'
           className='w-100'>Add Books</Button>

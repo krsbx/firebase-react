@@ -3,18 +3,24 @@ import { database } from '../Firebase/FirebaseSDK';
 import { Link, useHistory, useParams } from 'react-router-dom';
 import { Card, Button, Form, Alert } from 'react-bootstrap';
 import { deleteTarget } from '../Vuforia/VWS_Request';
+import { useBooks } from '../Context/BooksContext';
 
 export default function ListMarker() {
   const [details, setDetails] = useState([]);
   const [report, setReport] = useState('');
   const [requesting, setRequest] = useState(false);
-
   const [searchParams, setSearchParams] = useState('');
+  const seconds = 60 * 1000;
+  const timePass = 2 * seconds;
+
+  const { currentMode } = useBooks();
+
   const { booksId } = useParams();
   const history = useHistory();
 
   const GetBookMarker = () => {
-    database.ref(`Manager`).child(`${booksId}`).on('value', snapshot => {
+    
+    database.ref(`${currentMode}Manager`).child(`${booksId}`).on('value', snapshot => {
       if(snapshot.exists()){
         //Get The Marker Informations
         const temp = snapshot.val();
@@ -31,19 +37,29 @@ export default function ListMarker() {
   const searchResult = () => {
     //Get All Path
     const toDetails = Object.keys(details).filter((m) => {
-      if(searchParams === ''){
+      if (searchParams === ''){
         return m;
       }else if(m.toLowerCase().includes(searchParams.toLowerCase())){
         return m;
       }
+
+      return null;
     }).map( function (key, index) {
-      return(
-        <div key={key} className='pt-2 pb-2'>
-          <Link to={`/Books/${booksId}/${key}`} style={{ textDecoration: 'none', color: 'black' }} >
-            {`${key}`}
-          </Link>
-        </div>
-      )
+      const timestamp = details[key]['updatedAt'];
+      const converted = new Date(timestamp).getTime();
+      const now = new Date().getTime();
+
+      if (timestamp ? (now-converted > timePass) : true) {
+        return(
+          <div key={key} className='pt-2 pb-2'>
+            <Link to={`/Books/${booksId}/${key}`} style={{ textDecoration: 'none', color: 'black' }} >
+              {`${key}`}
+            </Link>
+          </div>
+        )
+      }
+
+      return null;
     });
 
     return toDetails;
@@ -53,7 +69,7 @@ export default function ListMarker() {
     setReport('');
     setRequest(true);
 
-    const managerRef = database.ref(`Manager`).child(`${booksId}`);
+    const managerRef = database.ref(`${currentMode}Manager`).child(`${booksId}`);
 
     const managerSnap = await managerRef.once('value');
 
@@ -73,7 +89,7 @@ export default function ListMarker() {
     const UID = [];
     
     for(var i = 0; i < ManagerId.length; i++) {
-      const cloudRef = database.ref(`Cloud Reco`).child(`${booksId}<bookPlat>${ManagerId[i]}`);
+      const cloudRef = database.ref(`${currentMode}Cloud Reco`).child(`${booksId}<bookPlat>${ManagerId[i]}`);
 
       const cloudSnap = await cloudRef.once('value');
 
@@ -87,30 +103,31 @@ export default function ListMarker() {
     //Delete Markers in VWS
     while (UID.length !== 0) {
       const id = UID.shift();
-      console.log(id);
       await deleteTarget(id);
     }
 
     //Clear Cloud Reco Sections
     ManagerId.map(manager => {
-      database.ref(`Cloud Reco`).child(`${booksId}<bookPlat>${manager}`).remove();
+      database.ref(`${currentMode}Cloud Reco`).child(`${booksId}<bookPlat>${manager}`).remove();
+      return null;
     });
 
     //Clear Marker Sections
     ManagerId.map(manager => {
-      database.ref(`Marker`).child(`${booksId}<bookPlat>${manager}`).remove();
+      database.ref(`${currentMode}Marker`).child(`${booksId}<bookPlat>${manager}`).remove();
+      return null;
     });
 
     //Remove Book Entry
-    database.ref(`Books`).child(`${booksId}`).remove();
-    database.ref(`Manager`).child(`${booksId}`).remove();
-    database.ref(`Store`).child(`${booksId}`).remove();
+    database.ref(`${currentMode}Books`).child(`${booksId}`).remove();
+    database.ref(`${currentMode}Manager`).child(`${booksId}`).remove();
+    database.ref(`${currentMode}Store`).child(`${booksId}`).remove();
 
     setReport('Books Deleted Successfully!');
 
     setTimeout(5000);
 
-    history.push(`/`);
+    history.push('/Books/');
   }
 
   return (
@@ -118,7 +135,7 @@ export default function ListMarker() {
       <Card.Body className='text-center'>
         <h2 className='text-center mb-4'>Marker</h2>
         { report && <Alert variant='success'> {report} </Alert> }
-        <div className='d-flex justify-content-center'>
+        <div style={{ display: 'flex', justifyContent: 'space-evenly', width: '100%' }}>
           <Button onClick={() => history.push(`/Store/${booksId}`) } disabled={requesting} >Edit Store</Button>
           <Button onClick={() => history.push(`/Marker/${booksId}`) } disabled={requesting} >Add Marker</Button>
           <Button className='btn btn-danger' onClick={() => DeleteBooks() } disabled={requesting}>Delete Books</Button>
