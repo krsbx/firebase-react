@@ -99,8 +99,8 @@ export default function AddMarker() {
         //Add New Marker To Manager Sections
         await database.ref(`${currentMode}Manager`).child(booksId).child(Markers).update({
           Name: Markers,
-          createdAt: timestamp,
-          updatedAt: timestamp,
+          CreatedAt: timestamp,
+          UpdatedAt: timestamp,
         });
 
         //Add New Marker To Marker Sections

@@ -96,7 +96,7 @@ export default function EditMarker() {
         });
 
         await database.ref(`${currentMode}Manager`).child(booksId).child(Markers).update({
-          updatedAt: timestamp,
+          UpdatedAt: timestamp,
         });
     
         await database.ref(`${currentMode}Marker`).child(`${booksId}<bookPlat>${markerId}`).update({

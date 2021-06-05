@@ -92,6 +92,7 @@ export function NewProvider( { children } ) {
         await database.ref(`${currentMode}Books`).child(bookPath).update({
           Author: Author,
           BookName: BookName,
+          CreatedAt: timestamp,
           Cover: Cover,
           Entry: numEnt,
           Publisher: Publisher,
@@ -105,8 +106,8 @@ export function NewProvider( { children } ) {
         //Post To Manager Sections
         await database.ref(`${currentMode}Manager`).child(bookPath).child(Markers).update({
           Name: Markers,
-          createdAt: timestamp,
-          updatedAt: timestamp,
+          CreatedAt: timestamp,
+          UpdatedAt: timestamp,
         });
 
         //Post To Marker Sections

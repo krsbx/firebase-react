@@ -45,7 +45,7 @@ export default function ListMarker() {
 
       return null;
     }).map( function (key, index) {
-      const timestamp = details[key]['updatedAt'];
+      const timestamp = details[key]['UpdatedAt'];
       const converted = new Date(timestamp).getTime();
       const now = new Date().getTime();
 

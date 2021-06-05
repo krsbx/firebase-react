@@ -26,7 +26,6 @@ const FetchActive = async () => {
   })
 }
 
-
 const HttpRequest = async (httpsOptions, body) => {
   const instance = axios.create({
     baseURL: httpsOptions.url,
@@ -48,7 +47,6 @@ const HttpRequest = async (httpsOptions, body) => {
 
 const VWSRequest = async (request) => {
   let body = {};
-
   
   if ( request.method !== 'delete' ) {
     body = JSON.parse(request.body);
