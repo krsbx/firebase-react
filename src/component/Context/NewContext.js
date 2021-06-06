@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, createContext } from 'react';
+import { useState, useEffect, useRef, useContext, createContext } from 'react';
 import { database, timestamp } from '../Firebase/FirebaseSDK';
 import { target, getMarker64 } from '../Vuforia/VWSHandler';
 import { addTarget } from '../Vuforia/VWS_Request';
@@ -29,17 +29,18 @@ export function NewProvider( { children } ) {
   const [requesting, setRequest] = useState(false);
   const [numEnt, setNumEnt] = useState();
   const history = useHistory();
+  const GetEntry = useRef(() => {});
 
   const { currentMode } = useBooks();
 
-  const GetEntry = () => {
+  GetEntry.current = () => {
     database.ref(`${currentMode}Books`).on('value', snapshot => {
       setNumEnt(snapshot.numChildren()+1);
     });
   }
 
   useEffect(() => {
-    GetEntry();
+    GetEntry.current();
   }, []);
 
   const PostBooksStore = async (event) => {

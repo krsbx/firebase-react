@@ -1,13 +1,16 @@
+import '../CSS/ScrollAble.css';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../Context/AuthContext';
 import { database } from '../Firebase/FirebaseSDK';
 import { Link, useHistory } from 'react-router-dom';
 import { Card, Button, Form } from 'react-bootstrap';
 import { useBooks } from '../Context/BooksContext';
+import Skeleton from '../Skeleton/SkeletonElement';
 
 export default function BookList() {
   const [books, setBooks] = useState([]);
   const [searchParams, setSearchParams] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const { currentMode, setCurrentMode } = useBooks();
   const { LogOut } = useAuth();
@@ -19,14 +22,16 @@ export default function BookList() {
 
     const BooksSnap = await BookRef.once('value');
 
-    if(BooksSnap.exists()){
-      //Get The Books Informations
-      const temp = BooksSnap.val();
+    setTimeout(() => {
+      if(BooksSnap.exists()){
+        //Get The Books Informations
+        const temp = BooksSnap.val();
+  
+        setBooks(temp);
+      }
 
-      setBooks(temp);
-    } else {
-      setBooks([]);
-    }
+      setLoading(false);
+    }, 1000);
   }
 
   const ChangeMode = () => {
@@ -40,6 +45,9 @@ export default function BookList() {
       mode = 'Vuforia/';
     }
 
+    setBooks([]);
+
+    setLoading(true);
     GetAllBooks(mode);
   }
 
@@ -59,8 +67,8 @@ export default function BookList() {
       return null;
     }).map( function (key, index) {
       return (
-        <div key={key} className='pt-2 pb-2'>
-          <Link to={`/Books/${key}`} style={{ textDecoration: 'none', color: 'black' }} >
+        <div key={key} className='LinkObj pt-2 pb-2'>
+          <Link to={`/Books/${key}`} >
             {`${books[key]['BookName']} by ${books[key]['Author']}`}
           </Link>
       </div>);
@@ -84,9 +92,12 @@ export default function BookList() {
             placeholder='Search Books'
             required/>
         </Form.Group>
-        <div className='scrollThings' style={{ overflow: 'auto', minHeight: '100px', maxHeight: '600px' }}>
-          { searchResult() }
-        </div>
+        { loading && books.length === 0 && <Skeleton /> }
+        { (!loading || books.length !== 0) &&
+          <div className='scrollThings'>
+            { searchResult() }
+          </div>
+        }
       </Card.Body>
     </Card>
   );

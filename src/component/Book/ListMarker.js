@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { database } from '../Firebase/FirebaseSDK';
 import { Link, useHistory, useParams } from 'react-router-dom';
 import { Card, Button, Form, Alert } from 'react-bootstrap';
 import { deleteTarget } from '../Vuforia/VWS_Request';
 import { useBooks } from '../Context/BooksContext';
+import Skeleton from '../Skeleton/SkeletonElement';
 
 export default function ListMarker() {
   const [details, setDetails] = useState([]);
   const [report, setReport] = useState('');
   const [requesting, setRequest] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useState('');
+
   const seconds = 60 * 1000;
   const timePass = 2 * seconds;
 
@@ -18,20 +21,26 @@ export default function ListMarker() {
   const { booksId } = useParams();
   const history = useHistory();
 
-  const GetBookMarker = () => {
+  const GetBookMarker = useRef(() => {});
+
+  GetBookMarker.current = async () => {
+    const ManagerRef = database.ref(`${currentMode}Manager`).child(`${booksId}`);
     
-    database.ref(`${currentMode}Manager`).child(`${booksId}`).on('value', snapshot => {
-      if(snapshot.exists()){
+    const ManagerSnap = await ManagerRef.once('value');
+
+    setTimeout(() => {
+      if(ManagerSnap.exists()){
         //Get The Marker Informations
-        const temp = snapshot.val();
+        const temp = ManagerSnap.val();
         
         setDetails(temp);
       }
-    });
+      setLoading(false);
+    }, 1000);
   };
 
   useEffect(() => {
-    GetBookMarker();
+    GetBookMarker.current();
   }, []);
 
   const searchResult = () => {
@@ -51,8 +60,8 @@ export default function ListMarker() {
 
       if (timestamp ? (now-converted > timePass) : true) {
         return(
-          <div key={key} className='pt-2 pb-2'>
-            <Link to={`/Books/${booksId}/${key}`} style={{ textDecoration: 'none', color: 'black' }} >
+          <div key={key} className='LinkObj pt-2 pb-2'>
+            <Link to={`/Books/${booksId}/${key}`} >
               {`${key}`}
             </Link>
           </div>
@@ -146,9 +155,12 @@ export default function ListMarker() {
             placeholder='Search Marker'
             required/>
         </Form.Group>
-        <div className='scrollThings' style={{ overflow: 'auto', minHeight: '100px', maxHeight: '600px' }}>
-          {searchResult()}
-        </div>
+        { loading && details.length === 0 && <Skeleton /> }
+        { (!loading && details.length !== 0) &&
+          <div className='scrollThings'>
+            { searchResult() }
+          </div>
+        }
       </Card.Body>
     </Card>
   )

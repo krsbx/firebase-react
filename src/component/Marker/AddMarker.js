@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { database, timestamp } from '../Firebase/FirebaseSDK';
 import { useParams, useHistory } from 'react-router-dom';
-import { Card, Form, Row, Button, Alert, FormControl } from 'react-bootstrap';
+import { Card, Form, Row, Button, Alert } from 'react-bootstrap';
 import { target, getMarker64 } from '../Vuforia/VWSHandler';
 import { addTarget } from '../Vuforia/VWS_Request';
 import { useBooks } from '../Context/BooksContext';
@@ -25,7 +25,9 @@ export default function AddMarker() {
 
   const { booksId } = useParams();
 
-  const GetBookInformations = () => {
+  const GetBookInformations = useRef(() => {});
+
+  GetBookInformations.current = () => {
     database.ref(`${currentMode}Books`).child(`${booksId}`).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
@@ -137,7 +139,7 @@ export default function AddMarker() {
   }
 
   useEffect(() => {
-    GetBookInformations();
+    GetBookInformations.current();
   }, []);
 
   return (

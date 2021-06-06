@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { database } from '../Firebase/FirebaseSDK';
 import { useParams } from 'react-router-dom';
 import { Card, Form, Button, Alert } from 'react-bootstrap';
@@ -19,7 +19,9 @@ export default function EditStore() {
 
   const { booksId } = useParams();
 
-  const GetStore = () => {
+  const GetStore = useRef(() => {});
+
+  GetStore.current = () => {
     database.ref(`${currentMode}Books`).child(booksId).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
@@ -56,7 +58,7 @@ export default function EditStore() {
   };
 
   useEffect(() => {
-    GetStore();
+    GetStore.current();
   }, []);
 
   return (

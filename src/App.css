@@ -30,15 +30,6 @@
   max-height: 600px;
 } */
 
-.scrollThings::-webkit-scrollbar {
-  width: 4px;
-}
-
-.scrollThings::-webkit-scrollbar-thumb {
-  background: #00000080;
-  border-radius: 4px;
-}
-
 /* 
 .App-link {
   color: #61dafb;

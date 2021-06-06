@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { database, timestamp } from '../Firebase/FirebaseSDK';
 import { useParams, useHistory } from 'react-router-dom';
 import { Card, Form, Row, Button, Alert } from 'react-bootstrap';
@@ -27,7 +27,9 @@ export default function EditMarker() {
 
   const { booksId, markerId } = useParams();
 
-  const GetMarkerDetails = () => {
+  const GetMarkerDetails = useRef(() => {});
+
+  GetMarkerDetails.current = () => {
     database.ref(`${currentMode}Books`).child(`${booksId}`).get().then(snapshot => {
       if(snapshot.exists()){
         const result = snapshot.val();
@@ -188,7 +190,7 @@ export default function EditMarker() {
   // #endregion
 
   useEffect(() => {
-    GetMarkerDetails();
+    GetMarkerDetails.current();
   }, []);
 
   return (

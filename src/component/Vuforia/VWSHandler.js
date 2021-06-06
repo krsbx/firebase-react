@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-export const URL = 'http://localhost:3001/api/';
+export const URL = process.env.REACT_APP_BACKEND;
 
 export const timestamp = () => {
   const now = new Date();

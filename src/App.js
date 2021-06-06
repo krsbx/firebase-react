@@ -1,4 +1,3 @@
-import './App.css';
 import { AuthProvider } from './component/Context/AuthContext';
 import Homepage from './component/Homepage';
 import { BrowserRouter as Router } from 'react-router-dom';
